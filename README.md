@@ -13,10 +13,15 @@
             host: 0.0.0.0
     ```
 2. Запустить Build приложения:   
-    Windows: ``` go build -o build/app.exe cmd/main/main.go ```
+    Windows: ``` go build -o build/app.exe cmd/main/main.go ```   
     Linux / Mac: ``` go build -o build/app cmd/main/main.go ```
 
 3. Запустить проложение Run:   
     Windows: ``` ./build/app.exe ``` 
     Linux: ``` ./build/app ```
 
+
+
+### Используемые библиотеки:
+**Логирование:** [ZAP](https://github.com/uber-go/zap)   
+**Конфигурация:** [Clean Env](https://github.com/ilyakaznacheev/cleanenv#clean-env)   
