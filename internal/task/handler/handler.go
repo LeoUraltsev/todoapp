@@ -4,14 +4,17 @@ import (
 	"net/http"
 
 	"github.com/LeoUraltsev/todoapp/internal/handlers"
+	"github.com/LeoUraltsev/todoapp/pkg/logger"
 )
 
 type Handler struct {
-	//TODO: Logger
+	logger *logger.Logger
 }
 
-func New() handlers.Handler {
-	return &Handler{}
+func New(logger *logger.Logger) handlers.Handler {
+	return &Handler{
+		logger: logger,
+	}
 }
 
 func (h *Handler) Register() {
@@ -19,6 +22,8 @@ func (h *Handler) Register() {
 }
 
 func (h *Handler) Tasks(w http.ResponseWriter, r *http.Request) {
+	h.logger.Debug("Accessing the route /tasks")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Hello !"))
 }

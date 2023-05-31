@@ -2,23 +2,34 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/LeoUraltsev/todoapp/internal/config"
 	"github.com/LeoUraltsev/todoapp/internal/task/handler"
+	"github.com/LeoUraltsev/todoapp/pkg/logger"
 )
 
 func main() {
+	logger := logger.GetLogger()
 
-	fmt.Println("app is running ...")
+	logger.Info("app is running ...")
 
-	fmt.Println("read config ...")
+	logger.Info("read config ...")
 	cfg := config.GetInstance()
 
-	h := handler.New()
+	logger.Info("creating handler ...")
+	h := handler.New(logger)
+
+	logger.Info("routes register ...")
 	h.Register()
 
-	fmt.Printf("server is start on host: %s and port: %s", cfg.Listen.Host, cfg.Listen.Port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", cfg.Listen.Host, cfg.Listen.Port), nil))
+	start(logger, cfg)
+
+}
+
+func start(logger *logger.Logger, cfg *config.Config) {
+	logger.Info(fmt.Sprintf("server is start on host: %s and port: %s", cfg.Listen.Host, cfg.Listen.Port))
+	if err := http.ListenAndServe(fmt.Sprintf("%s:%s", cfg.Listen.Host, cfg.Listen.Port), nil); err != nil {
+		logger.Fatal(err.Error())
+	}
 }
