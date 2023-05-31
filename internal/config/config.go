@@ -14,6 +14,15 @@ type Config struct {
 		Port string `yaml:"port" env:"PORT" env-description:"server port" env-default:"10000"`
 		Host string `yaml:"host" env:"HOST" env-description:"server host" env-default:"0.0.0.0"`
 	} `yaml:"listen"`
+	StorageConfig `yaml:"database"`
+}
+
+type StorageConfig struct {
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	Host     string `yaml:"host"`
+	Port     string `yaml:"port"`
+	Db       string `yaml:"db"`
 }
 
 var instanse *Config

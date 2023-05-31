@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"github.com/LeoUraltsev/todoapp/internal/task/model"
+	"github.com/LeoUraltsev/todoapp/pkg/client/postgesql"
 	"net/http"
 
 	"github.com/LeoUraltsev/todoapp/internal/config"
@@ -10,20 +13,37 @@ import (
 )
 
 func main() {
-	logger := logger.GetLogger()
+	log := logger.GetLogger()
 
-	logger.Info("app is running ...")
+	log.Info("app is running ...")
 
-	logger.Info("read config ...")
+	log.Info("read config ...")
 	cfg := config.GetInstance()
 
-	logger.Info("creating handler ...")
-	h := handler.New(logger)
+	log.Info("connect to database ...")
+	db, err := postgesql.NewClient(context.Background(), cfg.StorageConfig)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
-	logger.Info("routes register ...")
+	err = db.Ping(context.Background())
+	if err != nil {
+		log.Error(fmt.Sprintf("error is ping to database: %v", err))
+	}
+	var task model.Task
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	log.Info(task.Description)
+
+	log.Info("creating handler ...")
+	h := handler.New(log)
+
+	log.Info("routes register ...")
 	h.Register()
 
-	start(logger, cfg)
+	start(log, cfg)
 
 }
 

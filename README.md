@@ -25,3 +25,4 @@
 ### Используемые библиотеки:
 **Логирование:** [ZAP](https://github.com/uber-go/zap)   
 **Конфигурация:** [Clean Env](https://github.com/ilyakaznacheev/cleanenv#clean-env)   
+**База данных** [PostgreSQL Driver](https://github.com/jackc/pgx)
