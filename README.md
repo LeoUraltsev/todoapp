@@ -21,6 +21,17 @@
     Linux: ``` ./build/app ```
 
 
+### Маршруты в приложении:
+    GET /tasks - получения всех задач
+
+    GET /tasks?id="UUID" - получение задачи по идентификатору
+
+    POST /tasks - добавление новой задачи
+    BODY: {
+        "title":"title"
+        "description":"description"
+    }
+
 
 ### Используемые библиотеки:
 **Логирование:** [ZAP](https://github.com/uber-go/zap)   
