@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/LeoUraltsev/todoapp/internal/task/model"
+	"github.com/LeoUraltsev/todoapp/internal/task"
+	"github.com/LeoUraltsev/todoapp/internal/task/db"
 	"github.com/LeoUraltsev/todoapp/pkg/client/postgesql"
 	"net/http"
 
 	"github.com/LeoUraltsev/todoapp/internal/config"
-	"github.com/LeoUraltsev/todoapp/internal/task/handler"
 	"github.com/LeoUraltsev/todoapp/pkg/logger"
 )
 
@@ -21,24 +21,29 @@ func main() {
 	cfg := config.GetInstance()
 
 	log.Info("connect to database ...")
-	db, err := postgesql.NewClient(context.Background(), cfg.StorageConfig)
+
+	pgCfg := postgesql.Config{
+		Username: cfg.Username,
+		Password: cfg.Password,
+		Host:     cfg.Host,
+		Port:     cfg.Port,
+		Db:       cfg.Db,
+	}
+
+	client, err := postgesql.NewClient(context.Background(), pgCfg)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	err = db.Ping(context.Background())
+	err = client.Ping(context.Background())
 	if err != nil {
 		log.Error(fmt.Sprintf("error is ping to database: %v", err))
 	}
-	var task model.Task
 
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	log.Info(task.Description)
+	repository := db.NewRepository(client, log)
 
 	log.Info("creating handler ...")
-	h := handler.New(log)
+	h := task.NewHandler(log, repository)
 
 	log.Info("routes register ...")
 	h.Register()
