@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/julienschmidt/httprouter"
 	"io"
 	"net/http"
 
@@ -23,30 +24,16 @@ func NewHandler(logger *logger.Logger, repository Repository) handlers.Handler {
 	}
 }
 
-func (h *Handler) Register() {
-	http.HandleFunc("/tasks", h.Tasks)
-
+func (h *Handler) Register(router *httprouter.Router) {
+	router.GET("/tasks", h.GetTask)
+	router.GET("/tasks/:id", h.GetTaskByID)
+	router.POST("/tasks", h.CreateTask)
+	router.PUT("/tasks/:id", h.FullUpdateTask)
+	router.POST("/tasks/:id", h.PartiallyUpdateTask)
+	router.DELETE("/tasks/:id", h.DeleteTask)
 }
 
-func (h *Handler) Tasks(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		if !r.URL.Query().Has("id") {
-			h.GetTask(w, r)
-		} else {
-			h.GetTaskByID(w, r)
-		}
-	case http.MethodPost:
-		h.CreateTask(w, r)
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Header().Add("Allow", "GET, POST")
-
-	}
-
-}
-
-func (h *Handler) GetTask(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetTask(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	h.logger.Debug("GET /tasks")
 	w.Header().Set("Content-Type", "application/json")
 
@@ -65,7 +52,7 @@ func (h *Handler) GetTask(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	h.logger.Debug("POST /tasks")
 
 	if r.Body == nil {
@@ -99,8 +86,8 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(id))
 }
 
-func (h *Handler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+func (h *Handler) GetTaskByID(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	id := params.ByName("id")
 
 	task, err := h.repository.FindOne(context.Background(), id)
 	if err != nil {
@@ -118,5 +105,17 @@ func (h *Handler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "Application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(resp)
+
+}
+
+func (h *Handler) FullUpdateTask(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+
+}
+
+func (h *Handler) PartiallyUpdateTask(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+
+}
+
+func (h *Handler) DeleteTask(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 
 }

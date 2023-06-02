@@ -6,6 +6,7 @@ import (
 	"github.com/LeoUraltsev/todoapp/internal/task"
 	"github.com/LeoUraltsev/todoapp/internal/task/db"
 	"github.com/LeoUraltsev/todoapp/pkg/client/postgesql"
+	"github.com/julienschmidt/httprouter"
 	"net/http"
 
 	"github.com/LeoUraltsev/todoapp/internal/config"
@@ -42,19 +43,21 @@ func main() {
 
 	repository := db.NewRepository(client, log)
 
+	r := httprouter.New()
+
 	log.Info("creating handler ...")
 	h := task.NewHandler(log, repository)
 
 	log.Info("routes register ...")
-	h.Register()
+	h.Register(r)
 
-	start(log, cfg)
+	start(log, cfg, r)
 
 }
 
-func start(logger *logger.Logger, cfg *config.Config) {
+func start(logger *logger.Logger, cfg *config.Config, router *httprouter.Router) {
 	logger.Info(fmt.Sprintf("server is start on host: %s and port: %s", cfg.Listen.Host, cfg.Listen.Port))
-	if err := http.ListenAndServe(fmt.Sprintf("%s:%s", cfg.Listen.Host, cfg.Listen.Port), nil); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf("%s:%s", cfg.Listen.Host, cfg.Listen.Port), router); err != nil {
 		logger.Fatal(err.Error())
 	}
 }
