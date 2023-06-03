@@ -29,7 +29,7 @@ func (h *Handler) Register(router *httprouter.Router) {
 	router.GET("/tasks/:id", h.GetTaskByID)
 	router.POST("/tasks", h.CreateTask)
 	router.PUT("/tasks/:id", h.FullUpdateTask)
-	router.POST("/tasks/:id", h.PartiallyUpdateTask)
+	router.PATCH("/tasks/:id", h.PartiallyUpdateTask)
 	router.DELETE("/tasks/:id", h.DeleteTask)
 }
 
@@ -108,14 +108,85 @@ func (h *Handler) GetTaskByID(w http.ResponseWriter, r *http.Request, params htt
 
 }
 
-func (h *Handler) FullUpdateTask(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func (h *Handler) FullUpdateTask(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	w.Header().Set("Content-Type", "Application-json")
+
+	var task Task
+
+	task.ID = params.ByName("id")
+
+	if r.Body == nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	defer r.Body.Close()
+
+	resp, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+
+	err = json.Unmarshal(resp, &task)
+	if err != nil {
+		h.logger.Sugar().Errorf("unmarshal err %v", err)
+		return
+	}
+
+	h.logger.Debug(fmt.Sprintf("%s", task))
+
+	err = h.repository.Update(context.Background(), task)
+	if err != nil {
+		w.WriteHeader(http.StatusBadGateway)
+		return
+	}
+
+	w.WriteHeader(http.StatusAccepted)
 
 }
 
-func (h *Handler) PartiallyUpdateTask(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func (h *Handler) PartiallyUpdateTask(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	w.Header().Set("Content-Type", "Application-json")
 
+	var task Task
+
+	task.ID = params.ByName("id")
+
+	if r.Body == nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	defer r.Body.Close()
+
+	resp, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+
+	err = json.Unmarshal(resp, &task)
+	if err != nil {
+		h.logger.Sugar().Errorf("unmarshal err %v", err)
+		return
+	}
+
+	h.logger.Debug(fmt.Sprintf("%s", task))
+
+	err = h.repository.Update(context.Background(), task)
+	if err != nil {
+		w.WriteHeader(http.StatusBadGateway)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) DeleteTask(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func (h *Handler) DeleteTask(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	id := params.ByName("id")
+	err := h.repository.Delete(context.Background(), id)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 
 }

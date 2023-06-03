@@ -2,10 +2,12 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"github.com/LeoUraltsev/todoapp/internal/task"
 	"github.com/LeoUraltsev/todoapp/pkg/client/postgesql"
 	"github.com/LeoUraltsev/todoapp/pkg/logger"
 	"github.com/jackc/pgx/v5/pgconn"
+	"strings"
 )
 
 type repository struct {
@@ -84,13 +86,52 @@ func (r *repository) FindOne(ctx context.Context, id string) (task.Task, error) 
 }
 
 func (r *repository) Update(ctx context.Context, task task.Task) error {
-	//TODO implement me
-	panic("implement me")
+
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argID := 1
+
+	if task.Title != "" {
+		setValues = append(setValues, fmt.Sprintf("title = $%d", argID))
+		args = append(args, task.Title)
+		argID++
+	}
+
+	if task.Description != "" {
+		setValues = append(setValues, fmt.Sprintf("description = $%d", argID))
+		args = append(args, task.Description)
+		argID++
+	}
+
+	setQuery := strings.Join(setValues, ", ")
+
+	q := fmt.Sprintf(`UPDATE task
+		SET %s
+		WHERE id = $%d
+	`, setQuery, argID)
+
+	r.logger.Sugar().Infof("Query string: %s. Args: %s", q, args)
+	args = append(args, task.ID)
+
+	res, err := r.client.Exec(ctx, q, args...)
+	if err != nil {
+		r.logger.Sugar().Errorf("Update error: %v", err)
+		return err
+	}
+
+	r.logger.Sugar().Infof("Update data: %s, %d", res.String(), res.RowsAffected())
+
+	return nil
 }
 
 func (r *repository) Delete(ctx context.Context, id string) error {
-	//TODO implement me
-	panic("implement me")
+	q := `DELETE from task WHERE id=$1`
+	exec, err := r.client.Exec(ctx, q, id)
+	if err != nil {
+		return err
+	}
+	r.logger.Sugar().Infof("Task delete: %s", exec.String())
+	return nil
 }
 
 func NewRepository(client postgesql.Client, logger *logger.Logger) task.Repository {
